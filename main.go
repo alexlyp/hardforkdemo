@@ -45,6 +45,11 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	result, err := dcrdClient.GetStakeVersions(hash.String(), 100)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(result)
 	hardForkInformation.BlockHash = hash
 	hardForkInformation.BlockHeight = height
 }
