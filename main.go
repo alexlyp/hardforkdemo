@@ -14,15 +14,21 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/decred/dcrd/chaincfg/chainhash"
+	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/wire"
 	"github.com/decred/dcrrpcclient"
 )
 
 type hardForkInfo struct {
-	BlockHeight int64
-	BlockHash   *chainhash.Hash
+	BlockHeight              int64
+	BlockVersionWindowValues map[uint64]*blockVersions
 }
+
+type blockVersions struct {
+	VersionPercentages map[int32]int64
+}
+
+var activeNetParams = &chaincfg.TestNetParams
 
 var hardForkInformation = &hardForkInfo{}
 
@@ -45,12 +51,23 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	result, err := dcrdClient.GetStakeVersions(hash.String(), 100)
+	stakeVersionResults, err := dcrdClient.GetStakeVersions(hash.String(), int32(activeNetParams.BlockUpgradeNumToCheck*2))
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(result)
-	hardForkInformation.BlockHash = hash
+	blockVersionLookBack := make(map[uint64]*blockVersions, activeNetParams.BlockUpgradeNumToCheck)
+
+	for i := uint64(0); i < activeNetParams.BlockUpgradeNumToCheck; i++ {
+		currentBlockVersions := &blockVersions{}
+		currentBlockVersionPercentages := make(map[int32]int64)
+		for j := i; j < activeNetParams.BlockUpgradeNumToCheck+i; j++ {
+			currentBlockVersionPercentages[stakeVersionResults.StakeVersions[i].BlockVersion] += currentBlockVersionPercentages[stakeVersionResults.StakeVersions[i].BlockVersion] + int64(1)
+			//fmt.Println(i, j)
+		}
+		currentBlockVersions.VersionPercentages = currentBlockVersionPercentages
+		blockVersionLookBack[i] = currentBlockVersions
+	}
+	hardForkInformation.BlockVersionWindowValues = blockVersionLookBack
 	hardForkInformation.BlockHeight = height
 }
 
@@ -112,7 +129,7 @@ func main() {
 			"block notifications: %s\n", err.Error())
 		os.Exit(1)
 	}
-
+	updateHardForkInformation(dcrdClient)
 	go func() {
 		for {
 			select {
