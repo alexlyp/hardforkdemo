@@ -20,12 +20,12 @@ import (
 
 // Settings for daemon
 var dcrdCertPath = ("/home/user/.dcrd/rpc.cert")
-var dcrdServer = "127.0.0.1:19109"
+var dcrdServer = "127.0.0.1:9109"
 var dcrdUser = "USER"
 var dcrdPass = "PASSWORD"
 
 // Daemon Params to use
-var activeNetParams = &chaincfg.TestNetParams
+var activeNetParams = &chaincfg.MainNetParams
 
 // Webserver settings
 var listeningPort = ":8000"
