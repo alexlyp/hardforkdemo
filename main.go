@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -74,11 +73,6 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 var mux map[string]func(http.ResponseWriter, *http.Request)
 
 func main() {
-	server := http.Server{
-		Addr:    ":8000",
-		Handler: &myHandler{},
-	}
-
 	mux = make(map[string]func(http.ResponseWriter, *http.Request))
 	mux["/"] = demoPage
 
@@ -145,17 +139,11 @@ func main() {
 			}
 		}
 	}()
-
-	server.ListenAndServe()
-}
-
-type myHandler struct{}
-
-func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if h, ok := mux[r.URL.String()]; ok {
-		h(w, r)
-		return
+	http.HandleFunc("/", demoPage)
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("public/js/"))))
+	http.Handle("/css", http.StripPrefix("/css/", http.FileServer(http.Dir("public/css/"))))
+	err = http.ListenAndServe(":8000", nil)
+	if err != nil {
+		fmt.Printf("Failed to bind http server: %s\n", err.Error())
 	}
-
-	io.WriteString(w, "My server: "+r.URL.String())
 }
