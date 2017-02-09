@@ -32,11 +32,18 @@ var listeningPort = ":8000"
 
 // Overall Data structure given to the template to render
 type hardForkInfo struct {
-	BlockHeight              int64
-	BlockVersions            map[int32]*blockVersions
-	BlockVersionsHeights     []int64
-	BlockVersionWindowLength uint64
-	BlockVersionThreshold    int
+	BlockHeight                   int64
+	BlockVersions                 map[int32]*blockVersions
+	BlockVersionsHeights          []int64
+	BlockVersionWindowLength      uint64
+	BlockVersionEnforceThreshold  int
+	BlockVersionRejectThreshold   int
+	CurrentCalculatedBlockVersion int32
+	BlockCountAtLatestVersion     int
+	StakeVersionThreshold         int
+	StakeVersionWindowLength      int
+	MostPopularVersion            int32
+	MostPopularVersionPercentage  float64
 }
 
 // Contains a certain block version's count of blocks in the
@@ -110,8 +117,34 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 	}
 	hardForkInformation.BlockVersionsHeights = blockVersionsHeights
 	hardForkInformation.BlockVersions = blockVersionsFound
+
+	currentVersion := int32(100000)
+	mostPopularVersionCount := 0
+	for i, blockVersion := range hardForkInformation.BlockVersions {
+		tipBlockVersionCount := blockVersion.RollingWindowLookBacks[len(blockVersion.RollingWindowLookBacks)-1]
+		if tipBlockVersionCount >= int(activeNetParams.BlockRejectNumRequired) {
+			currentVersion = i
+			hardForkInformation.MostPopularVersion = i
+			hardForkInformation.MostPopularVersionPercentage = float64(tipBlockVersionCount) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100
+		}
+		if tipBlockVersionCount > mostPopularVersionCount {
+			mostPopularVersionCount = tipBlockVersionCount
+			hardForkInformation.MostPopularVersion = i
+			hardForkInformation.MostPopularVersionPercentage = float64(tipBlockVersionCount) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100
+		}
+	}
+	if currentVersion == 100000 {
+		for i := range hardForkInformation.BlockVersions {
+			if i < currentVersion {
+				currentVersion = i
+			}
+		}
+	}
+	hardForkInformation.CurrentCalculatedBlockVersion = currentVersion
+
 	hardForkInformation.BlockHeight = height
-	hardForkInformation.BlockVersionThreshold = int(float64(activeNetParams.BlockEnforceNumRequired) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100)
+	hardForkInformation.BlockVersionEnforceThreshold = int(float64(activeNetParams.BlockEnforceNumRequired) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100)
+	hardForkInformation.BlockVersionRejectThreshold = int(float64(activeNetParams.BlockRejectNumRequired) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100)
 	hardForkInformation.BlockVersionWindowLength = activeNetParams.BlockUpgradeNumToCheck
 }
 
