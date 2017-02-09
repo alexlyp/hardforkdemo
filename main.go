@@ -18,6 +18,9 @@ import (
 	"github.com/decred/dcrrpcclient"
 )
 
+// Set some high value to check version number
+var maxVersion = 10000
+
 // Settings for daemon
 var dcrdCertPath = ("/home/user/.dcrd/rpc.cert")
 var dcrdServer = "127.0.0.1:9109"
@@ -41,7 +44,7 @@ type hardForkInfo struct {
 	CurrentCalculatedBlockVersion int32
 	BlockCountAtLatestVersion     int
 	StakeVersionThreshold         int
-	StakeVersionWindowLength      int
+	StakeVersionWindowLength      int64
 	MostPopularVersion            int32
 	MostPopularVersionPercentage  float64
 }
@@ -95,7 +98,6 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 		windowEnd := i + int(activeNetParams.BlockUpgradeNumToCheck)
 		blockVersionsHeights[elementNum] = stakeVersionResults.StakeVersions[i].Height
 		stakeVersionsWindow := stakeVersionResults.StakeVersions[i:windowEnd]
-
 		for _, stakeVersion := range stakeVersionsWindow {
 			_, ok := blockVersionsFound[stakeVersion.BlockVersion]
 			if !ok {
@@ -118,12 +120,13 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 	hardForkInformation.BlockVersionsHeights = blockVersionsHeights
 	hardForkInformation.BlockVersions = blockVersionsFound
 
-	currentVersion := int32(100000)
+	// Calculate current block version and most popular version (and that percentage)
+	hardForkInformation.CurrentCalculatedBlockVersion = int32(maxVersion)
 	mostPopularVersionCount := 0
 	for i, blockVersion := range hardForkInformation.BlockVersions {
 		tipBlockVersionCount := blockVersion.RollingWindowLookBacks[len(blockVersion.RollingWindowLookBacks)-1]
 		if tipBlockVersionCount >= int(activeNetParams.BlockRejectNumRequired) {
-			currentVersion = i
+			hardForkInformation.CurrentCalculatedBlockVersion = i
 			hardForkInformation.MostPopularVersion = i
 			hardForkInformation.MostPopularVersionPercentage = float64(tipBlockVersionCount) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100
 		}
@@ -133,19 +136,22 @@ func updateHardForkInformation(dcrdClient *dcrrpcclient.Client) {
 			hardForkInformation.MostPopularVersionPercentage = float64(tipBlockVersionCount) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100
 		}
 	}
-	if currentVersion == 100000 {
+	if hardForkInformation.CurrentCalculatedBlockVersion == int32(maxVersion) {
 		for i := range hardForkInformation.BlockVersions {
-			if i < currentVersion {
-				currentVersion = i
+			if i < hardForkInformation.CurrentCalculatedBlockVersion {
+				hardForkInformation.CurrentCalculatedBlockVersion = i
 			}
 		}
 	}
-	hardForkInformation.CurrentCalculatedBlockVersion = currentVersion
 
 	hardForkInformation.BlockHeight = height
 	hardForkInformation.BlockVersionEnforceThreshold = int(float64(activeNetParams.BlockEnforceNumRequired) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100)
 	hardForkInformation.BlockVersionRejectThreshold = int(float64(activeNetParams.BlockRejectNumRequired) / float64(activeNetParams.BlockUpgradeNumToCheck) * 100)
 	hardForkInformation.BlockVersionWindowLength = activeNetParams.BlockUpgradeNumToCheck
+	hardForkInformation.StakeVersionWindowLength = activeNetParams.StakeVersionInterval
+
+	// XXX Fill in with real numbers once added to params
+	hardForkInformation.StakeVersionThreshold = 75
 }
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
