@@ -478,7 +478,7 @@ The second step of this process is the actual voting. The previously mentioned {
     var powSmallChartData = {
         labels: ["Last {{.BlockVersionWindowLength}} Blocks"],
         datasets: [
-        {{range $i, $element := .BlockVersions}}
+        {{range $i, $element := reverseBlockVersions .BlockVersions}}
         {{$length := minus (len $element.RollingWindowLookBacks) 1}}
           {
           type: 'bar',

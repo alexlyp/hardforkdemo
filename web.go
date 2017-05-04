@@ -143,10 +143,11 @@ type templateFields struct {
 }
 
 var funcMap = template.FuncMap{
-	"plus":      plus,
-	"minus":     minus,
-	"minus64":   minus64,
-	"modiszero": modiszero,
+	"plus":                 plus,
+	"minus":                minus,
+	"minus64":              minus64,
+	"modiszero":            modiszero,
+	"reverseBlockVersions": reverseBlockVersions,
 }
 
 func plus(a, b int) int {
@@ -160,6 +161,15 @@ func minus64(a, b int64) int64 {
 }
 func modiszero(a, b int) bool {
 	return (a % b) == 0
+}
+
+func reverseBlockVersions(slice map[int32]*blockVersions) map[int32]*blockVersions {
+	newSlice := make(map[int32]*blockVersions, len(slice))
+	for i := int32(len(slice)) - 1; i >= 0; i++ {
+		k := int32(len(slice)-1) - i
+		newSlice[k] = slice[i]
+	}
+	return newSlice
 }
 
 // TemplateExecToString executes the specified template with given data, writing
