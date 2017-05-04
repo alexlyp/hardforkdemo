@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/decred/dcrd/dcrjson"
 )
 
@@ -66,7 +67,8 @@ type templateFields struct {
 	// BlockVersion Information
 	//
 	// BlockVersions is the data after it has been prepared for graphing.
-	BlockVersions map[int32]*blockVersions
+	BlockVersions         map[int32]*blockVersions
+	BlockVersionsReversed []*blockVersions
 	// BlockVersionHeights is an array of Block heights for graph's x axis.
 	BlockVersionsHeights []int64
 	// BlockVersionSuccess is a bool whether or not BlockVersion has
@@ -165,10 +167,12 @@ func modiszero(a, b int) bool {
 
 func reverseBlockVersions(slice map[int32]*blockVersions) map[int32]*blockVersions {
 	newSlice := make(map[int32]*blockVersions, len(slice))
-	for i := int32(len(slice)) - 1; i >= 0; i++ {
+	for i := int32(len(slice)) - 1; i >= 0; i-- {
 		k := int32(len(slice)-1) - i
-		newSlice[k] = slice[i]
+		newElement := slice[i]
+		newSlice[k] = newElement
 	}
+	spew.Dump(newSlice)
 	return newSlice
 }
 

@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/wire"
 	"github.com/decred/dcrrpcclient"
@@ -139,7 +140,16 @@ func updatetemplateInformation(dcrdClient *dcrrpcclient.Client, db *agendadb.Age
 	}
 	templateInformation.BlockVersionsHeights = blockVersionsHeights
 	templateInformation.BlockVersions = blockVersionsFound
-
+	reverse := make([]*blockVersions, len(blockVersionsFound))
+	currentVersion := int32(0)
+	for version, results := range blockVersionsFound {
+		if currentVersion < version {
+			currentVersion = version
+			reverse = append(reverse, results)
+		}
+	}
+	templateInformation.BlockVersionsReversed = reverse
+	spew.Dump(templateInformation.BlockVersionsReversed)
 	// Pick min block version (current version) out of most recent window
 	stakeVersionsWindow := stakeVersionResults.StakeVersions[:activeNetParams.BlockUpgradeNumToCheck]
 	blockVersionsCounts := make(map[int32]int64)
