@@ -1972,6 +1972,7 @@ body {
 .upgrade-content-statistics-numbers {
   display: inline-block;
   max-width: 60%;
+  min-width: 40%;
   float: left;
   line-height: 26px;
 }

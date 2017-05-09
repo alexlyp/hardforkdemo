@@ -131,17 +131,13 @@ This is measured in the following ways:
                 <span class="highlight-text green">v{{.BlockVersionCurrent}}</span>
                 {{else}}
                 <span class="highlight-text orange">v{{.BlockVersionCurrent}}</span>
-                {{end}}
-                {{if .BlockVersionSuccess}}
-                <br> Next Version: <span class="highlight-text green">v{{.BlockVersionNext}}</span>
-                {{else}}
                 <br> Next Version: <span class="highlight-text orange">v{{.BlockVersionNext}}</span>
-                {{end}}
                 <br> Next: <span class="highlight-text">{{.BlockVersionNextPercentage}}%</span>
                 <!--<br> Most Popular Version: <span class="highlight-text green">v{{.BlockVersionMostPopular}}</span>
                 <br> Most Popular: <span class="highlight-text">{{.BlockVersionMostPopularPercentage}}%</span>-->
                 <br> Upgrade Threshold: <span class="highlight-text">{{.BlockVersionRejectThreshold}}%</span>
                 <br> Rolling Window: <span class="highlight-text">{{.BlockVersionWindowLength}} Blocks</span>
+                {{end}}
               </div>
               <div class="pow-pos-time-remaining transition"></div>
             </div>
@@ -210,15 +206,11 @@ This is measured in the following ways:
                 <span class="highlight-text green">v{{.StakeVersionCurrent}}</span>
                 {{else}}
                 <span class="highlight-text orange">v{{.StakeVersionCurrent}}</span>
-                {{end}}
-                {{if .StakeVersionSuccess}}
-                <br> Most Popular Version: <span class="highlight-text green">v{{.StakeVersionMostPopular}}</span>
-                {{else}}
                 <br> Most Popular Version: <span class="highlight-text orange">v{{.StakeVersionMostPopular}}</span>
-                {{end}}
                 <br> Most Popular: <span class="highlight-text">{{.StakeVersionMostPopularCount}}/{{.StakeVersionWindowVoteTotal}} Votes</span>
                 <br> Upgrade Threshold: <span class="highlight-text">{{.StakeVersionThreshold}}%</span>
                 <br> Upgrade Interval: <span class="highlight-text">{{.StakeVersionIntervalBlocks}}</span>
+                {{end}}
               </div>
               {{if not .StakeVersionSuccess}}
               <div class="pow-pos-time-remaining transition">{{.StakeVersionTimeRemaining}}</div>
