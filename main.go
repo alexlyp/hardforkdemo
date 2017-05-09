@@ -29,7 +29,6 @@ import (
 var maxVersion = 10000
 
 // Settings for daemon
-var network = flag.String("network", "mainnet", "current network being used")
 var host = flag.String("host", "127.0.0.1:9109", "node RPC host:port")
 var user = flag.String("user", "USER", "node RPC username")
 var pass = flag.String("pass", "PASSWORD", "node RPC password")
@@ -57,7 +56,7 @@ type intervalVersionCounts struct {
 
 // Set all activeNetParams fields since they don't change at runtime
 var templateInformation = &templateFields{
-	Network: *network,
+	Network: chaincfg.MainNetParams.Name,
 	// BlockVersion params
 	BlockVersionEnforceThreshold: int(float64(activeNetParams.BlockEnforceNumRequired) /
 		float64(activeNetParams.BlockUpgradeNumToCheck) * 100),
@@ -100,7 +99,7 @@ func updatetemplateInformation(dcrdClient *dcrrpcclient.Client, db *agendadb.Age
 	// Set Current block height
 	templateInformation.BlockHeight = height
 	templateInformation.BlockExplorerLink = fmt.Sprintf("https://%s.decred.org/block/%v",
-		*network, hash)
+		activeNetParams.Name, hash)
 
 	// Request GetStakeVersions to receive information about past block versions.
 	//
